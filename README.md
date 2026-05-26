@@ -1,7 +1,7 @@
 # Mission Control AI - ConnectSat
 
 ## Integrantes
-- [Preencher nome] - RM: [Preencher RM] - Turma: [Preencher turma]
+- Kayo Henderson - RM: 570706 - Turma: 1CCPK
 
 ## Modalidade
 - [Individual | Dupla | Trio]
