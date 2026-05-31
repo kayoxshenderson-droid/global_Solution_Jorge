@@ -19,14 +19,11 @@ load_dotenv()
 CLOUD_HOST = "https://ollama.com"
 LOCAL_HOST = os.environ.get("OLLAMA_LOCAL_HOST", "http://localhost:11434")
 OLLAMA_API_KEY = os.environ.get("OLLAMA_API_KEY")
+PREFERRED_CLOUD_MODEL = os.environ.get("OLLAMA_MODEL", "gpt-oss:120b")
+PREFERRED_LOCAL_MODEL = os.environ.get("OLLAMA_LOCAL_MODEL", "").strip() or "llama3.2"
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 SYSTEM_PROMPT_PATH = PROJECT_ROOT / "prompts" / "system_prompt.md"
 USE_CLOUD = bool(OLLAMA_API_KEY)
-DEFAULT_MODEL = (
-    os.environ.get("OLLAMA_MODEL", "gpt-oss:120b")
-    if USE_CLOUD
-    else os.environ.get("OLLAMA_LOCAL_MODEL", "llama3.2")
-)
 OLLAMA_HOST = (
     os.environ.get("OLLAMA_HOST", CLOUD_HOST) if USE_CLOUD else os.environ.get("OLLAMA_LOCAL_HOST", LOCAL_HOST)
 )
@@ -40,11 +37,39 @@ else:
     client = Client(host=OLLAMA_HOST)
 
 
+def _available_local_models() -> list[tuple[str, int]]:
+    try:
+        response = client.list()
+    except Exception:
+        return []
+
+    models: list[tuple[str, int]] = []
+    for item in getattr(response, "models", []) or []:
+        model_name = getattr(item, "model", "")
+        if model_name and not model_name.endswith("-cloud"):
+            models.append((model_name, int(getattr(item, "size", 0) or 0)))
+    return models
+
+
+def _resolve_model() -> str:
+    if USE_CLOUD:
+        return PREFERRED_CLOUD_MODEL
+
+    available_models = _available_local_models()
+    available_names = [name for name, _size in available_models]
+    if PREFERRED_LOCAL_MODEL in available_names:
+        return PREFERRED_LOCAL_MODEL
+    if available_models:
+        return min(available_models, key=lambda item: item[1])[0]
+    return PREFERRED_LOCAL_MODEL
+
+
 def llm(prompt: str, max_tokens: int = 500, temperature: float = 0.2) -> str:
     """Envia prompt ao modelo configurado no Ollama local/cloud e retorna texto."""
+    model = _resolve_model()
     try:
         return client.chat(
-            model=DEFAULT_MODEL,
+            model=model,
             messages=[{"role": "user", "content": prompt}],
             options={"num_predict": max_tokens, "temperature": temperature},
             stream=False,
@@ -55,10 +80,20 @@ def llm(prompt: str, max_tokens: int = 500, temperature: float = 0.2) -> str:
                 "Nao foi possivel consultar a Ollama Cloud. "
                 "Verifique a OLLAMA_API_KEY ou execute `ollama signin` na sua instalação local."
             )
+        available_models = _available_local_models()
+        available_names = [name for name, _size in available_models]
+        if available_names:
+            return (
+                "Nao foi possivel consultar o Ollama local. "
+                f"Erro: {e}. "
+                f"Modelo tentado: `{model}`. "
+                f"Modelos locais encontrados: {', '.join(available_names)}."
+            )
         return (
             "Nao foi possivel consultar o Ollama local. "
             f"Erro: {e}. "
-            f"Garanta que o Ollama esteja rodando em {OLLAMA_HOST} e que o modelo `{DEFAULT_MODEL}` esteja instalado."
+            f"Garanta que o Ollama esteja rodando em {OLLAMA_HOST} e que um modelo local esteja instalado, "
+            "por exemplo com `ollama pull gpt-oss:20b`."
         )
 
 
@@ -82,7 +117,7 @@ class MissionEngine:
         return {
             "host": OLLAMA_HOST,
             "has_api_key": bool(OLLAMA_API_KEY),
-            "model": DEFAULT_MODEL,
+            "model": _resolve_model(),
             "mode": "cloud" if USE_CLOUD else "local",
             "track": "ConnectSat",
             "scenario": self.last_scenario,
