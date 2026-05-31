@@ -32,6 +32,8 @@ Operador NOC de conectividade rural, que precisa priorizar continuidade de inter
    - `OLLAMA_API_KEY=sua_chave`
    - opcional: `OLLAMA_HOST=https://ollama.com`
    - opcional: `OLLAMA_MODEL=gpt-oss:120b`
+   - no modo local, o app tenta usar `OLLAMA_LOCAL_MODEL` e faz fallback para um modelo instalado
+   - exemplo local leve: `OLLAMA_LOCAL_MODEL=llama3.2:1b`
 5. Execute:
    - `python main.py`
 
