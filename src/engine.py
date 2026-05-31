@@ -16,9 +16,20 @@ from src.telemetria import (
 
 load_dotenv()
 
-DEFAULT_MODEL = os.environ.get("OLLAMA_MODEL", "gpt-oss:120b")
-OLLAMA_HOST = os.environ.get("OLLAMA_HOST", "https://ollama.com")
+CLOUD_HOST = "https://ollama.com"
+LOCAL_HOST = os.environ.get("OLLAMA_LOCAL_HOST", "http://localhost:11434")
 OLLAMA_API_KEY = os.environ.get("OLLAMA_API_KEY")
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+SYSTEM_PROMPT_PATH = PROJECT_ROOT / "prompts" / "system_prompt.md"
+USE_CLOUD = bool(OLLAMA_API_KEY)
+DEFAULT_MODEL = (
+    os.environ.get("OLLAMA_MODEL", "gpt-oss:120b")
+    if USE_CLOUD
+    else os.environ.get("OLLAMA_LOCAL_MODEL", "llama3.2")
+)
+OLLAMA_HOST = (
+    os.environ.get("OLLAMA_HOST", CLOUD_HOST) if USE_CLOUD else os.environ.get("OLLAMA_LOCAL_HOST", LOCAL_HOST)
+)
 
 if OLLAMA_API_KEY:
     client = Client(
@@ -39,12 +50,30 @@ def llm(prompt: str, max_tokens: int = 500, temperature: float = 0.2) -> str:
             stream=False,
         )["message"]["content"].strip()
     except Exception as e:
-        return f"Erro ao consultar IA: {e}"
+        if USE_CLOUD:
+            return (
+                "Nao foi possivel consultar a Ollama Cloud. "
+                "Verifique a OLLAMA_API_KEY ou execute `ollama signin` na sua instalação local."
+            )
+        return (
+            "Nao foi possivel consultar o Ollama local. "
+            f"Erro: {e}. "
+            f"Garanta que o Ollama esteja rodando em {OLLAMA_HOST} e que o modelo `{DEFAULT_MODEL}` esteja instalado."
+        )
+
+
+def _load_system_prompt() -> str:
+    if SYSTEM_PROMPT_PATH.exists():
+        return SYSTEM_PROMPT_PATH.read_text(encoding="utf-8").strip()
+    return (
+        "Você é a Central de Missao com IA da trilha ConnectSat.\n"
+        "Analise a telemetria, destaque riscos e explique o impacto terrestre."
+    )
 
 
 class MissionEngine:
     def __init__(self) -> None:
-        self.system_prompt = Path("prompts/system_prompt.md").read_text(encoding="utf-8")
+        self.system_prompt = _load_system_prompt()
         self.last_snapshot: dict | None = None
         self.last_alerts: list[Alert] = []
         self.last_scenario = "aleatorio"
@@ -54,8 +83,10 @@ class MissionEngine:
             "host": OLLAMA_HOST,
             "has_api_key": bool(OLLAMA_API_KEY),
             "model": DEFAULT_MODEL,
+            "mode": "cloud" if USE_CLOUD else "local",
             "track": "ConnectSat",
             "scenario": self.last_scenario,
+            "prompt_ready": bool(self.system_prompt),
         }
 
     def collect(self, scenario: str | None = None) -> dict:
@@ -92,7 +123,11 @@ class MissionEngine:
             "impacto_terrestre": impact,
         }
 
-    def analyze(self, user_question: str = "Como esta a missao?") -> str:
+    def analyze(
+        self,
+        user_question: str = "Como esta a missao?",
+        llm_runner=llm,
+    ) -> str:
         if not self.last_snapshot:
             self.collect()
 
@@ -123,4 +158,4 @@ Alertas de regra Python (JSON):
 Resumo de decisao automatica (JSON):
 {decision_json}
 """
-        return llm(prompt)
+        return llm_runner(prompt)

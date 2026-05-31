@@ -2,35 +2,53 @@
 
 ## Integrantes
 - [Preencher nome] - RM: [Preencher RM] - Turma: [Preencher turma]
+- [Preencher nome] - RM: [Preencher RM] - Turma: [Preencher turma]
 
 ## Modalidade
 - [Individual | Dupla | Trio]
 
 ## O que o projeto faz
-Sistema de monitoramento de satélite ConnectSat com telemetria simulada, detecção de anomalias por regras Python e análise contextual via IA generativa.
-O foco é transformar sinais técnicos em resposta operacional e impacto terrestre para inclusão digital.
+O Mission Control AI simula a operação de um satelite de telecomunicacoes da trilha ConnectSat. O sistema gera telemetria, detecta anomalias com regras Python e usa Ollama Cloud ou Ollama local para explicar o estado da missao em linguagem natural, destacando o impacto sobre conectividade rural, telemedicina e escolas.
 
 ## Persona atendida
-Operador NOC de conectividade rural, que precisa priorizar continuidade de internet para escolas, telemedicina e serviços essenciais.
+Operador de NOC de uma operadora de conectividade rural. A interface foi pensada para leitura rapida de status tecnico, priorizacao de incidentes e traducao do risco orbital em consequencias praticas na Terra.
 
 ## Tecnologias utilizadas
 - Python 3.10+
-- Ollama Cloud API (modelo padrão: `gpt-oss:120b`)
+- Ollama Cloud API ou Ollama local
 - `ollama==0.6.2`
 - `python-dotenv==1.2.2`
 - `rich==15.0.0`
 - `prompt-toolkit==3.0.52`
 - `pyfiglet==1.0.4`
 
+## Estrutura do projeto
+```text
+mission-control-ai/
+├── main.py
+├── banner_ascii.py
+├── requirements.txt
+├── prompts/system_prompt.md
+├── data/cenarios.json
+├── assets/
+└── src/
+    ├── alertas.py
+    ├── engine.py
+    ├── telemetria.py
+    └── ui.py
+```
+
 ## Como executar
 1. Clone o repositório.
 2. Crie e ative um ambiente virtual.
-3. Instale as dependências:
+3. Instale as dependencias:
    - `pip install -r requirements.txt`
 4. Crie um arquivo `.env` na raiz com:
-   - `OLLAMA_API_KEY=sua_chave`
-   - opcional: `OLLAMA_HOST=https://ollama.com`
+   - para cloud: `OLLAMA_API_KEY=sua_chave_aqui_sem_aspas`
+   - para local: `OLLAMA_LOCAL_MODEL=llama3.2`
    - opcional: `OLLAMA_MODEL=gpt-oss:120b`
+   - opcional: `OLLAMA_HOST=https://ollama.com`
+   - opcional: `OLLAMA_LOCAL_HOST=http://localhost:11434`
 5. Execute:
    - `python main.py`
 
@@ -45,37 +63,32 @@ Operador NOC de conectividade rural, que precisa priorizar continuidade de inter
 - `analisar <pergunta>`
 - `sair` ou `/exit`
 
-## Demonstração
-- Adicionar prints reais em `assets/`:
-  - `assets/screenshot_normal.png`
-  - `assets/screenshot_alerta.png`
+## Prints reais
+Os arquivos abaixo mostram a aplicacao rodando com telemetria normal e com um cenario critico:
 
-## System Prompt
-O prompt está em: `prompts/system_prompt.md`
+![Telemetria normal](assets/screenshot_normal.png)
+![Cenario critico](assets/screenshot_critico.png)
 
-## Cenários de teste
-1. Operação normal (`cenario normal`)
-2. Latência elevada (`cenario latencia`)
-3. Situação crítica (`cenario critico`)
-4. Quase apagão (`cenario apagao`)
+## System prompt
+O prompt usado pela IA esta em `prompts/system_prompt.md`. Ele orienta a resposta para:
+- resumo operacional objetivo
+- riscos e severidade
+- acao imediata recomendada
+- impacto terrestre esperado
+
+## Proposta de valor / modelo de negocio
+O problema real resolvido e a continuidade de internet em areas sem fibra. Quando a missao opera bem, escolas rurais, postos de saude e pequenos negocios mantem conectividade estavel, reduzindo interrupcoes em telemedicina e educacao remota.
+
+Quem paga pela solucao pode ser um modelo hibrido: operadoras de telecom, programas publicos de inclusao digital e clientes corporativos que precisam de cobertura em regioes remotas. A medicao de impacto pode ser feita por tempo de disponibilidade, numero de escolas atendidas e reducao de incidentes de conexao em periodos criticos.
+
+O modelo de negocio se encaixa bem como assinatura de monitoramento e dado-como-servico, com relatórios operacionais para NOC, gestao de rede e equipe de campo.
 
 ## Limitações conhecidas
-- Telemetria ainda é simulada (sem ingestão de stream real).
-- Não há persistência de histórico em banco.
-- Não há suíte automatizada de testes.
-
-## Proposta de valor / modelo de negócio
-1. Quem se beneficia na Terra:
-   - Comunidades rurais, escolas e unidades de saúde conectadas por satélite.
-2. Quem paga pela operação:
-   - Operadoras de telecom, governos locais e programas de inclusão digital.
-3. Qual problema econômico/social resolve:
-   - Reduz indisponibilidade de comunicação em áreas sem infraestrutura de fibra.
-4. Métricas de sucesso:
-   - Menor tempo de resposta a incidentes.
-   - Redução de perda de pacotes em eventos críticos.
-   - Melhoria de continuidade para serviços essenciais.
+- A telemetria ainda e simulada.
+- Nao existe persistencia em banco.
+- Nao ha testes automatizados.
+- A resposta da IA depende de um modelo instalado localmente ou de uma chave valida da Ollama Cloud.
 
 ## Vídeo de demonstração
-- Adicionar link YouTube não listado aqui após gravar.
-
+- Adicionar aqui o link do YouTube nao listado.
+- Exemplo: `https://www.youtube.com/watch?v=SEU_ID_AQUI`

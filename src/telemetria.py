@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import json
 import random
 from dataclasses import dataclass, asdict
 from datetime import datetime, UTC
+from pathlib import Path
 
 
 @dataclass
@@ -19,7 +21,10 @@ class TelemetrySnapshot:
         return asdict(self)
 
 
-SCENARIOS: dict[str, dict[str, float]] = {
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+SCENARIOS_PATH = PROJECT_ROOT / "data" / "cenarios.json"
+
+DEFAULT_SCENARIOS: dict[str, dict[str, float]] = {
     "normal": {
         "uplink_latency_ms": 48.0,
         "throughput_mbps": 180.0,
@@ -55,6 +60,24 @@ SCENARIOS: dict[str, dict[str, float]] = {
 }
 
 
+def _load_scenarios() -> dict[str, dict[str, float]]:
+    if SCENARIOS_PATH.exists():
+        try:
+            raw = json.loads(SCENARIOS_PATH.read_text(encoding="utf-8"))
+            scenarios: dict[str, dict[str, float]] = {}
+            for name, values in raw.items():
+                if isinstance(values, dict):
+                    scenarios[name.lower()] = {key: float(value) for key, value in values.items()}
+            if scenarios:
+                return scenarios
+        except (OSError, ValueError, TypeError, json.JSONDecodeError):
+            pass
+    return DEFAULT_SCENARIOS
+
+
+SCENARIOS = _load_scenarios()
+
+
 def generate_connectsat_snapshot() -> TelemetrySnapshot:
     now = datetime.now(UTC).isoformat(timespec="seconds")
     return TelemetrySnapshot(
@@ -75,6 +98,7 @@ def list_scenarios() -> list[str]:
 def generate_snapshot_for_scenario(name: str) -> TelemetrySnapshot:
     scenario = SCENARIOS.get(name.lower())
     if not scenario:
-        raise ValueError(f"Cenario invalido: {name}")
+        available = ", ".join(list_scenarios())
+        raise ValueError(f"Cenario invalido: {name}. Opcoes: {available}")
     now = datetime.now(UTC).isoformat(timespec="seconds")
     return TelemetrySnapshot(timestamp_utc=now, **scenario)
