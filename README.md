@@ -1,11 +1,12 @@
 # Mission Control AI - ConnectSat
 
-## Integrantes
-- [Preencher nome] - RM: [Preencher RM] - Turma: [Preencher turma]
+## Integrante
+- Kayo Henderson
+- RM: 570706
+- Turma: 1CCPK
 
 ## Modalidade
-- [Individual | Dupla | Trio]
-
+- Individual
 ## O que o projeto faz
 Sistema de monitoramento de satélite ConnectSat com telemetria simulada, detecção de anomalias por regras Python e análise contextual via IA generativa.
 O foco é transformar sinais técnicos em resposta operacional e impacto terrestre para inclusão digital.
