@@ -67,15 +67,18 @@ O prompt está em: `prompts/system_prompt.md`
 
 ## Proposta de valor / modelo de negócio
 1. Quem se beneficia na Terra:
-   - Comunidades rurais, escolas e unidades de saúde conectadas por satélite.
+   -Comunidades rurais, escolas e unidades de saúde que dependem de conectividade via satélite.
+
 2. Quem paga pela operação:
-   - Operadoras de telecom, governos locais e programas de inclusão digital.
+   - Operadoras de telecomunicações, governos e programas de inclusão digital.
+   
 3. Qual problema econômico/social resolve:
-   - Reduz indisponibilidade de comunicação em áreas sem infraestrutura de fibra.
+   - Reduz falhas de comunicação em regiões sem infraestrutura de fibra, garantindo maior estabilidade para serviços essenciais.
+   
 4. Métricas de sucesso:
-   - Menor tempo de resposta a incidentes.
-   - Redução de perda de pacotes em eventos críticos.
-   - Melhoria de continuidade para serviços essenciais.
+   -Atendimento a mais de 50.000 usuários, conexão de até 500 escolas e unidades de saúde e redução de até 30% no tempo de indisponibilidade.
+   - Modelo baseado em Dados-como-Serviço (DaaS)
+   - Contratos de monitoramento para operadoras e órgãos públicos.
 
 ## Vídeo de demonstração
 - Adicionar link YouTube não listado aqui após gravar.
